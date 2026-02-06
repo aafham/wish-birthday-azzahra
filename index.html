@@ -2,7 +2,9 @@
 <html lang="en">
 
 <head>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@400;500;600&display=swap"
+    rel="stylesheet">
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,17 +15,23 @@
 <body>
 
   <div class="card">
+    <span class="sticker star">&#10022;</span>
+    <span class="sticker heart">&#10084;</span>
     <div class="cover">
+      <div class="controls">
+        <button class="theme-toggle" aria-label="Toggle theme">Tema</button>
+        <button class="sound-toggle" aria-label="Toggle sound">Bunyi</button>
+      </div>
       <h1 class="fade delay-1 birthday-title">
         Happy Birthday<br>
         <span>Azzahra</span>
       </h1>
 
-      <p class="fade delay-2">Adik bongsu kesayangan kami 🤍</p>
+      <p class="fade delay-2 typewriter" data-text="Adik bongsu kesayangan kami 🤍" aria-live="polite"></p>
 
     </div>
 
-    <div class="wish fade delay-3">
+    <div class="wish">
       <p>
         Semoga Azzahra sentiasa berada dalam lindungan Allah,
         dipermudahkan urusan dalam menuntut ilmu Al-Quran
@@ -47,12 +55,19 @@
     </div>
 
 
-    <div class="image-box fade delay-4">
-      <img
-        src="https://scontent.fszb2-1.fna.fbcdn.net/v/t1.6435-9/51612660_1009586975908340_6726368726309928960_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=833d8c&_nc_ohc=gQwhFRuk9fUQ7kNvwEB_xWf&_nc_oc=AdkYBnTh2eTMex-DzoH19Ig_IrBdAk0zYbeEb_AO5UjOq-HLyrG13B3G99I8wxbd52s&_nc_zt=23&_nc_ht=scontent.fszb2-1.fna&_nc_gid=CM6-zGKS-gbesx9I8cFnzA&oh=00_AfsKvC3ujtXlRRLbE_sQJ2V7J_YVZCoJqwkZCVtuNUA8Sw&oe=69ABFFCC"
-        alt="Birthday Image">
+        <div class="image-box fade delay-4">
+      <div class="photo-frame">
+        <img
+          src="https://scontent.fszb2-1.fna.fbcdn.net/v/t1.6435-9/51612660_1009586975908340_6726368726309928960_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=833d8c&_nc_ohc=gQwhFRuk9fUQ7kNvwEB_xWf&_nc_oc=AdkYBnTh2eTMex-DzoH19Ig_IrBdAk0zYbeEb_AO5UjOq-HLyrG13B3G99I8wxbd52s&_nc_zt=23&_nc_ht=scontent.fszb2-1.fna&_nc_gid=CM6-zGKS-gbesx9I8cFnzA&oh=00_AfsKvC3ujtXlRRLbE_sQJ2V7J_YVZCoJqwkZCVtuNUA8Sw&oe=69ABFFCC"
+          alt="Birthday Image">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="replay">Replay 🎬</button>
+      <button class="share">Share</button>
     </div>
-    <button class="replay">Replay 🎬</button>
+    <div class="cta">Tap untuk ulang animasi</div>
+    <div class="swipe-hint">Swipe untuk baca penuh</div>
 
   </div>
 
@@ -63,3 +78,13 @@
 </body>
 
 </html>
+
+
+
+
+
+
+
+
+
+
