@@ -5,7 +5,6 @@ const card = document.querySelector('.card');
 const cardScroll = document.querySelector('.card-scroll');
 const imageBox = document.querySelector('.image-box');
 const themeToggle = document.querySelector('.theme-toggle');
-const soundToggle = document.querySelector('.sound-toggle');
 const shareBtn = document.querySelector('.share');
 const typewriter = document.querySelector('.typewriter');
 const swipeHint = document.querySelector('.swipe-hint');
@@ -19,6 +18,7 @@ const modal = document.querySelector('.image-modal');
 const modalImg = document.querySelector('.image-modal__img');
 const modalClose = document.querySelector('.image-modal__close');
 const modalBackdrop = document.querySelector('.image-modal__backdrop');
+const bgMusic = document.querySelector('.bg-music');
 
 const themes = ['rose', 'elegant', 'minimal'];
 const themeLabels = {
@@ -27,8 +27,7 @@ const themeLabels = {
   minimal: 'Minimal'
 };
 let themeIndex = 0;
-let soundOn = true;
-let audioCtx = null;
+let musicStarted = false;
 let typeTimer = null;
 let rafId = null;
 let progressRaf = null;
@@ -46,46 +45,6 @@ function setupStagger() {
     p.classList.add('fade');
     p.style.animationDelay = `${0.8 + i * 0.2}s`;
   });
-}
-
-function createAudioContext() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  return audioCtx;
-}
-
-function playChime() {
-  if (!soundOn) return;
-  try {
-    const ctx = createAudioContext();
-    if (ctx.state === 'suspended') ctx.resume();
-
-    const now = ctx.currentTime;
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.08, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
-
-    const osc1 = ctx.createOscillator();
-    osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(880, now);
-
-    const osc2 = ctx.createOscillator();
-    osc2.type = 'triangle';
-    osc2.frequency.setValueAtTime(1320, now + 0.05);
-
-    osc1.connect(gain);
-    osc2.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc1.start(now);
-    osc2.start(now + 0.05);
-    osc1.stop(now + 1.1);
-    osc2.stop(now + 1.1);
-  } catch (e) {
-    // ignore audio errors
-  }
 }
 
 function launchConfetti() {
@@ -176,7 +135,6 @@ function replayAnimations() {
 
   runTypewriter();
   launchConfetti();
-  playChime();
 }
 
 function setupParallax() {
@@ -217,23 +175,6 @@ function setupShare() {
     } catch (e) {
       shareBtn.textContent = 'Share';
     }
-  });
-}
-
-function updateSoundLabel() {
-  if (!soundToggle) return;
-  soundToggle.textContent = soundOn ? 'Bunyi: On' : 'Bunyi: Off';
-  soundToggle.classList.toggle('off', !soundOn);
-}
-
-function setupSoundToggle() {
-  if (!soundToggle) return;
-  updateSoundLabel();
-
-  soundToggle.addEventListener('click', () => {
-    soundOn = !soundOn;
-    updateSoundLabel();
-    if (soundOn) playChime();
   });
 }
 
@@ -353,24 +294,35 @@ function setupHaptics() {
   });
 }
 
+function setupBackgroundMusic() {
+  if (!bgMusic) return;
+  bgMusic.loop = true;
+  const startMusic = () => {
+    if (musicStarted) return;
+    musicStarted = true;
+    bgMusic.play().catch(() => {});
+  };
+  bgMusic.play().catch(() => {});
+  document.addEventListener('click', startMusic, { once: true });
+  document.addEventListener('touchstart', startMusic, { once: true });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   applyTheme();
   setupStagger();
   setupParallax();
   setupShare();
-  setupSoundToggle();
   setupWishToggle();
   setupCopyWish();
   setupStickerSparkles();
   setupImageModal();
   setupHaptics();
+  setupBackgroundMusic();
   runTypewriter();
   launchConfetti();
   updateSwipeHint();
   updateScrollProgress();
   autoScrollReveal();
-  playChime();
-
   const img = imageBox ? imageBox.querySelector('img') : null;
   if (img) {
     img.addEventListener('load', () => {
