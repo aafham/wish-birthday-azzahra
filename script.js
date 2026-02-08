@@ -205,9 +205,9 @@ function setupWishToggle() {
     updateWishHeights();
     updateSwipeHint();
     if (isCollapsed) {
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         wishBox.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
-      }, 120);
+      });
     }
   });
 }
@@ -302,9 +302,9 @@ function setupBackgroundMusic() {
     musicStarted = true;
     bgMusic.play().catch(() => {});
   };
-  bgMusic.play().catch(() => {});
-  document.addEventListener('click', startMusic, { once: true });
-  document.addEventListener('touchstart', startMusic, { once: true });
+  document.addEventListener('pointerdown', startMusic, { once: true, passive: true });
+  document.addEventListener('touchstart', startMusic, { once: true, passive: true });
+  document.addEventListener('click', startMusic, { once: true, passive: true });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
