@@ -2,23 +2,36 @@ const replayBtn = document.querySelector('.replay');
 const animated = document.querySelectorAll('.fade');
 const wishParas = document.querySelectorAll('.wish p');
 const card = document.querySelector('.card');
+const cardScroll = document.querySelector('.card-scroll');
 const imageBox = document.querySelector('.image-box');
 const themeToggle = document.querySelector('.theme-toggle');
 const soundToggle = document.querySelector('.sound-toggle');
 const shareBtn = document.querySelector('.share');
 const typewriter = document.querySelector('.typewriter');
 const swipeHint = document.querySelector('.swipe-hint');
+const wish = document.querySelector('.wish');
+const wishBox = document.querySelector('.wish-box');
+const wishToggle = document.querySelector('.wish-toggle');
+const copyWish = document.querySelector('.copy-wish');
 
 const themes = ['rose', 'elegant', 'minimal'];
+const themeLabels = {
+  rose: 'Rose',
+  elegant: 'Elegant',
+  minimal: 'Minimal'
+};
 let themeIndex = 0;
 let soundOn = true;
 let audioCtx = null;
 let typeTimer = null;
+let rafId = null;
+const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function applyTheme() {
   const theme = themes[themeIndex];
   document.body.dataset.theme = theme;
-  themeToggle.textContent = 'Tema';
+  const label = themeLabels[theme] || theme;
+  themeToggle.textContent = `Tema: ${label}`;
 }
 
 function setupStagger() {
@@ -69,6 +82,7 @@ function playChime() {
 }
 
 function launchConfetti() {
+  if (reduceMotion) return;
   const existing = document.querySelector('.confetti');
   if (existing) existing.remove();
 
@@ -114,18 +128,18 @@ function runTypewriter() {
 
 function updateSwipeHint() {
   if (!swipeHint) return;
-  const bodyOverflow = getComputedStyle(document.body).overflowY;
-  const overflow = document.body.scrollHeight > window.innerHeight + 20 && bodyOverflow !== 'hidden';
+  if (!cardScroll) return;
+  const overflow = cardScroll.scrollHeight > cardScroll.clientHeight + 8;
   swipeHint.style.display = overflow ? 'block' : 'none';
 }
 
 function autoScrollReveal() {
-  const bodyOverflow = getComputedStyle(document.body).overflowY;
-  const overflow = document.body.scrollHeight > window.innerHeight + 20 && bodyOverflow !== 'hidden';
-  if (!overflow || !imageBox) return;
+  if (!cardScroll || !imageBox) return;
+  const overflow = cardScroll.scrollHeight > cardScroll.clientHeight + 8;
+  if (!overflow) return;
 
   setTimeout(() => {
-    imageBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    imageBox.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
   }, 2500);
 }
 
@@ -148,11 +162,16 @@ function replayAnimations() {
 }
 
 function setupParallax() {
-  if (!imageBox) return;
-  window.addEventListener('scroll', () => {
-    const ratio = Math.min(window.scrollY / 220, 1);
-    imageBox.style.transform = `translateY(${ratio * 8}px)`;
-  });
+  if (!imageBox || !cardScroll || reduceMotion) return;
+  const handleScroll = () => {
+    if (rafId) return;
+    rafId = window.requestAnimationFrame(() => {
+      const ratio = Math.min(cardScroll.scrollTop / 220, 1);
+      imageBox.style.transform = `translateY(${ratio * 8}px)`;
+      rafId = null;
+    });
+  };
+  cardScroll.addEventListener('scroll', handleScroll, { passive: true });
 }
 
 function setupShare() {
@@ -200,20 +219,63 @@ function setupSoundToggle() {
   });
 }
 
+function setupWishToggle() {
+  if (!wish || !wishToggle || !wishBox) return;
+  wish.classList.add('collapsed');
+  wishToggle.addEventListener('click', () => {
+    const isCollapsed = wish.classList.contains('collapsed');
+    wish.classList.toggle('collapsed');
+    wishToggle.textContent = isCollapsed ? 'Tutup' : 'Baca lagi';
+    wishToggle.setAttribute('aria-expanded', isCollapsed ? 'true' : 'false');
+    updateSwipeHint();
+    if (isCollapsed) {
+      setTimeout(() => {
+        wishBox.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+      }, 120);
+    }
+  });
+}
+
+function setupCopyWish() {
+  if (!copyWish || !wishBox) return;
+  copyWish.addEventListener('click', async () => {
+    const text = wishBox.innerText.trim();
+    try {
+      await navigator.clipboard.writeText(text);
+      const prev = copyWish.textContent;
+      copyWish.textContent = 'Copied';
+      setTimeout(() => (copyWish.textContent = prev), 1200);
+    } catch (e) {
+      copyWish.textContent = 'Gagal';
+      setTimeout(() => (copyWish.textContent = 'Copy Doa'), 1200);
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   applyTheme();
   setupStagger();
   setupParallax();
   setupShare();
   setupSoundToggle();
+  setupWishToggle();
+  setupCopyWish();
   runTypewriter();
   launchConfetti();
   updateSwipeHint();
   autoScrollReveal();
   playChime();
+
+  const img = imageBox ? imageBox.querySelector('img') : null;
+  if (img) {
+    img.addEventListener('load', updateSwipeHint);
+  }
 });
 
 window.addEventListener('resize', updateSwipeHint);
+if (cardScroll) {
+  cardScroll.addEventListener('scroll', updateSwipeHint, { passive: true });
+}
 
 themeToggle.addEventListener('click', () => {
   themeIndex = (themeIndex + 1) % themes.length;
