@@ -304,6 +304,8 @@ body::after {
   font-size: 20px;
   opacity: 0.8;
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.15));
+  cursor: pointer;
+  user-select: none;
 }
 
 .sticker.star {
@@ -388,6 +390,7 @@ body::after {
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
   backdrop-filter: blur(10px);
   overflow: hidden;
+  transition: max-height 0.35s ease;
 }
 
 .wish-box::before {

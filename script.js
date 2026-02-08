@@ -13,6 +13,12 @@ const wish = document.querySelector('.wish');
 const wishBox = document.querySelector('.wish-box');
 const wishToggle = document.querySelector('.wish-toggle');
 const copyWish = document.querySelector('.copy-wish');
+const scrollProgress = document.querySelector('.scroll-progress');
+const stickers = document.querySelectorAll('.sticker');
+const modal = document.querySelector('.image-modal');
+const modalImg = document.querySelector('.image-modal__img');
+const modalClose = document.querySelector('.image-modal__close');
+const modalBackdrop = document.querySelector('.image-modal__backdrop');
 
 const themes = ['rose', 'elegant', 'minimal'];
 const themeLabels = {
@@ -25,6 +31,7 @@ let soundOn = true;
 let audioCtx = null;
 let typeTimer = null;
 let rafId = null;
+let progressRaf = null;
 const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function applyTheme() {
@@ -133,6 +140,17 @@ function updateSwipeHint() {
   swipeHint.style.display = overflow ? 'block' : 'none';
 }
 
+function updateScrollProgress() {
+  if (!scrollProgress || !cardScroll) return;
+  if (progressRaf) return;
+  progressRaf = window.requestAnimationFrame(() => {
+    const max = cardScroll.scrollHeight - cardScroll.clientHeight;
+    const ratio = max > 0 ? Math.min(cardScroll.scrollTop / max, 1) : 0;
+    scrollProgress.style.height = `${ratio * 100}%`;
+    progressRaf = null;
+  });
+}
+
 function autoScrollReveal() {
   if (!cardScroll || !imageBox) return;
   const overflow = cardScroll.scrollHeight > cardScroll.clientHeight + 8;
@@ -221,12 +239,29 @@ function setupSoundToggle() {
 
 function setupWishToggle() {
   if (!wish || !wishToggle || !wishBox) return;
+  const paragraphs = wishBox.querySelectorAll('p');
   wish.classList.add('collapsed');
+  const updateWishHeights = () => {
+    if (!paragraphs.length) return;
+    const baseHeight = Array.from(paragraphs)
+      .slice(0, 2)
+      .reduce((sum, p) => sum + p.getBoundingClientRect().height, 0);
+    const padding = 28;
+    const collapsedHeight = baseHeight + padding;
+    if (wish.classList.contains('collapsed')) {
+      wishBox.style.maxHeight = `${collapsedHeight}px`;
+    } else {
+      wishBox.style.maxHeight = `${wishBox.scrollHeight}px`;
+    }
+  };
+  updateWishHeights();
+  window.addEventListener('resize', updateWishHeights);
   wishToggle.addEventListener('click', () => {
     const isCollapsed = wish.classList.contains('collapsed');
     wish.classList.toggle('collapsed');
     wishToggle.textContent = isCollapsed ? 'Tutup' : 'Baca lagi';
     wishToggle.setAttribute('aria-expanded', isCollapsed ? 'true' : 'false');
+    updateWishHeights();
     updateSwipeHint();
     if (isCollapsed) {
       setTimeout(() => {
@@ -252,6 +287,72 @@ function setupCopyWish() {
   });
 }
 
+function setupStickerSparkles() {
+  if (!stickers.length || !card) return;
+  stickers.forEach(sticker => {
+    sticker.addEventListener('click', () => {
+      if (reduceMotion) return;
+      const count = 6 + Math.floor(Math.random() * 4);
+      const stickerRect = sticker.getBoundingClientRect();
+      const cardRect = card.getBoundingClientRect();
+      for (let i = 0; i < count; i++) {
+        const particle = document.createElement('span');
+        particle.className = 'sparkle-particle';
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 16 + Math.random() * 14;
+        const dx = Math.cos(angle) * distance;
+        const dy = Math.sin(angle) * distance;
+        particle.style.setProperty('--dx', `${dx}px`);
+        particle.style.setProperty('--dy', `${dy}px`);
+        const x = stickerRect.left - cardRect.left + stickerRect.width / 2 + (Math.random() * 8 - 4);
+        const y = stickerRect.top - cardRect.top + stickerRect.height / 2 + (Math.random() * 8 - 4);
+        particle.style.left = `${x}px`;
+        particle.style.top = `${y}px`;
+        card.appendChild(particle);
+        particle.addEventListener('animationend', () => particle.remove());
+      }
+    });
+  });
+}
+
+function setupImageModal() {
+  if (!imageBox || !modal || !modalImg || !modalClose || !modalBackdrop) return;
+  const img = imageBox.querySelector('img');
+  if (!img) return;
+
+  const openModal = () => {
+    modalImg.src = img.src;
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+  };
+
+  const closeModal = () => {
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+    modalImg.src = '';
+  };
+
+  img.addEventListener('click', openModal);
+  modalClose.addEventListener('click', closeModal);
+  modalBackdrop.addEventListener('click', closeModal);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('open')) {
+      closeModal();
+    }
+  });
+}
+
+function setupHaptics() {
+  if (!navigator.vibrate) return;
+  const buttons = document.querySelectorAll('button');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => navigator.vibrate(10));
+  });
+  stickers.forEach(sticker => {
+    sticker.addEventListener('click', () => navigator.vibrate(10));
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   applyTheme();
   setupStagger();
@@ -260,21 +361,32 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSoundToggle();
   setupWishToggle();
   setupCopyWish();
+  setupStickerSparkles();
+  setupImageModal();
+  setupHaptics();
   runTypewriter();
   launchConfetti();
   updateSwipeHint();
+  updateScrollProgress();
   autoScrollReveal();
   playChime();
 
   const img = imageBox ? imageBox.querySelector('img') : null;
   if (img) {
-    img.addEventListener('load', updateSwipeHint);
+    img.addEventListener('load', () => {
+      updateSwipeHint();
+      updateScrollProgress();
+    });
   }
 });
 
-window.addEventListener('resize', updateSwipeHint);
+window.addEventListener('resize', () => {
+  updateSwipeHint();
+  updateScrollProgress();
+});
 if (cardScroll) {
   cardScroll.addEventListener('scroll', updateSwipeHint, { passive: true });
+  cardScroll.addEventListener('scroll', updateScrollProgress, { passive: true });
 }
 
 themeToggle.addEventListener('click', () => {
